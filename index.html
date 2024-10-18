@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ふくびき券最短手順</title>
+    <title>スマホ・Switch版 ドラクエ２ふくびき券 簡単手順</title>
 </head>
 <body>
-    <h1>ふくびき券最短手順(6手まで)</h1>
+    <h1>スマホ・Switch版 ドラクエ２ふくびき券 簡単手順</h1>
     
     <label for="input1">所持金:</label>
     <input type="number" id="input1" oninput="calculate()"><br><br>
@@ -18,8 +18,22 @@
     <input type="number" id="input3" oninput="calculate()"><br><br>
     
     <h2>結果</h2>
-    <textarea id="result" rows="4" cols="50" readonly></textarea>
+    <textarea id="result" rows="4" cols="50" readonly></textarea><br><br>
     
+    <p>
+        <h2>テクニック</h2>
+        毒消し草売却→薬草購入 もしくは<br>
+        薬草２つ売却→薬草購入 で繰り返し可能<br><br>
+        お金がなくなったら福引券を売って再度数値入力を！<br><br>
+        <h2>ふくびき券を入手するためには</h2>
+        商品を買った後に<br>
+        ・所持GOLDの各桁の合計が5の倍数(5や14、159など)<br>
+        ・受け取ったキャラの持ち物の数が7以下<br>
+        であることが必要です<br>
+        <h2>このプログラムについて</h2>
+        このプログラムでは所持アイテム個数の条件を考慮せず、薬草と毒消し草のみについてを計算します<br>
+        また、このプログラムは最大6回の全探索です
+    </p>
     <script>
         function step(first, buy, nani, yakunum, dokunum, gold, te, saishute) {
             nedan = [8,10,-4,-8]
@@ -37,7 +51,7 @@
                 //合計の計算
                 let digits = gold.toString().split('');
                 let sum = digits.reduce((acc, digit) => acc + parseInt(digit), 0);
-                if (sum % 5 == 0 && gold != 0 && buy) {
+                if (sum % 5 == 0 && buy) {
                     //console.log("HIT!")
                     if (saishute.length == 0 || te.length < saishute.length){
                         saishute = te
@@ -78,6 +92,8 @@
                 let digits = gold.toString().split('');
                 let sum = digits.reduce((acc, digit) => acc + parseInt(digit), 0);
                 resultText += " 各桁の合計→" + sum
+                if (gold == 0) {resultText += "\n※警告※ 最終ゴールドが0の場合は未検証のため、もらえない可能性があります！"}
+                resultText = resultText.substr(1)
             }
 
             document.getElementById('result').value = resultText;

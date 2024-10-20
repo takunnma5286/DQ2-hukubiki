@@ -3,20 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマホ・Switch版 ドラクエ２ふくびき券 簡単手順</title>
+    <title>スマホ・Switch・スーパーファミコン全対応 ドラクエ２ふくびき券 簡単手順</title>
+
+    <style>
+        #GOLD {
+            width: 5em;
+        }
+        #yaku {
+            width: 5em;
+        }
+        #dokukeshi {
+            width: 5em;
+        }
+    </style>
 </head>
 <body>
-    <h1>スマホ・Switch版 ドラクエ２ふくびき券 簡単手順</h1>
+    <h1>スマホ・Switch・スーパーファミコン全対応 ドラクエ２ふくびき券 簡単手順</h1>
     
-    <label for="input1">所持金:</label>
-    <input type="number" id="input1" oninput="calculate()"><br><br>
+    <label for="GOLD">　　　所持金:</label>
+    <input type="number" id="GOLD" oninput="calculate()"><br><br>
     
-    <label for="input2">薬草所持:</label>
-    <input type="number" id="input2" oninput="calculate()"><br><br>
+    <label for="yaku">やくそう所持:</label>
+    <input type="number" id="yaku" oninput="calculate()"><br><br>
     
-    <label for="input3">毒消し所持:</label>
-    <input type="number" id="input3" oninput="calculate()"><br><br>
+    <label for="dokukeshi">毒消し草所持:</label>
+    <input type="number" id="dokukeshi" oninput="calculate()"><br><br>
     
+    <label for="version">スマホ・Switch版</label>
+    <input type="radio" id="version" name="version" value="0" oninput="calculate()" checked><br>
+
+    <label for="version">スーパーファミコン</label>
+    <input type="radio" id="version" name="version" value="1" oninput="calculate()"><br><br>
     <h2>結果</h2>
     <textarea id="result" rows="4" cols="50" readonly></textarea><br><br>
     
@@ -26,10 +43,13 @@
         薬草２つ売却→薬草購入 で繰り返し可能<br><br>
         お金がなくなったら福引券を売って再度数値入力を！<br><br>
         <h2>ふくびき券を入手するためには</h2>
+        <h3>スマホ・Switch版</h3>
         商品を買った後に<br>
         ・所持GOLDの各桁の合計が5の倍数(5や14、159など)<br>
         ・受け取ったキャラの持ち物の数が7以下<br>
-        であることが必要です<br>
+        <h3>スーパーファミコン版</h3>
+        商品を買った後に<br>
+        ・所持GOLDを 2byte 3つに区切り、その合計の下位1byteが1または3<br>
         <h2>このプログラムについて</h2>
         このプログラムでは所持アイテム個数の条件を考慮せず、薬草と毒消し草のみについてを計算します<br>
         また、このプログラムは最大6回の全探索です
@@ -49,14 +69,32 @@
                 
                 gold -= nedan[nani + 2 + buy * -2]
                 //合計の計算
-                let digits = gold.toString().split('');
-                let sum = digits.reduce((acc, digit) => acc + parseInt(digit), 0);
-                if (sum % 5 == 0 && buy) {
-                    //console.log("HIT!")
-                    if (saishute.length == 0 || te.length < saishute.length){
-                        saishute = te
+                if (version){ //スマホswitch
+                    let digits = gold.toString().split('');
+                    let sum = digits.reduce((acc, digit) => acc + parseInt(digit), 0);
+                    if (sum % 5 == 0 && buy && gold != 0) { //所持金が0の場合はダメっぽいので変更
+                        //console.log("HIT!")
+                        if (saishute.length == 0 || te.length < saishute.length){
+                            saishute = te
+                        }
                     }
                 }
+                else {
+                    const byte1 = (gold >> 16) & 0xFF // 上位8ビット
+                    const byte2 = (gold >> 8) & 0xFF  // 中位8ビット
+                    const byte3 = gold & 0xFF         // 下位8ビット
+
+                    const sum = byte1 + byte2 + byte3;
+                    
+                    const yonBits = sum & 0x0F;
+                    if (yonBits == 1 || yonBits == 3) {
+                        //console.log("HIT!")
+                        if (saishute.length == 0 || te.length < saishute.length){
+                            saishute = te
+                        }
+                    }
+                }
+
             }
             if (te.length != 6){
                 if (gold >= 8) {saishute = step(false, true, 0, yakunum, dokunum, gold, te.concat(0), saishute)}
@@ -70,10 +108,11 @@
 
         function calculate() {
             // 入力値を取得（空の入力には0を使用）
-            let gold = parseInt(document.getElementById('input1').value) || 0;
-            const yaku = parseInt(document.getElementById('input2').value) || 0;
-            const doku = parseInt(document.getElementById('input3').value) || 0;
-
+            let gold = parseInt(document.getElementById('GOLD').value) || 0
+            const yaku = parseInt(document.getElementById('yaku').value) || 0
+            const doku = parseInt(document.getElementById('dokukeshi').value) || 0
+            const version = document.getElementById('version').checked //めんどいからこれでいいや
+            window.version = version //こうしないとグローバル変数として読めない；；
             saishute = step(true, true, -1, yaku, doku, gold, [], [])
             nedan = [8,10,-4,-8]
 
@@ -82,17 +121,29 @@
             if (saishute.length == 0) {resultText = "6手以内に見つけられなかった、もしくは値が不正です"}
             else {
                 saishute.forEach(element => {
-                    if (element == 0) {resultText += "\n買草"}
-                    if (element == 1) {resultText += "\n買毒"}
-                    if (element == 2) {resultText += "\n売草"}
-                    if (element == 3) {resultText += "\n売毒"}
+                    if (element == 0) {resultText += "\n買 やくそう"}
+                    if (element == 1) {resultText += "\n買 毒消し草"}
+                    if (element == 2) {resultText += "\n売 やくそう"}
+                    if (element == 3) {resultText += "\n売 毒消し草"}
                     gold -= nedan[element]
                     resultText += " GOLD→" + gold
                 })
-                let digits = gold.toString().split('');
-                let sum = digits.reduce((acc, digit) => acc + parseInt(digit), 0);
-                resultText += " 各桁の合計→" + sum
-                if (gold == 0) {resultText += "\n※警告※ 最終ゴールドが0の場合は未検証のため、もらえない可能性があります！"}
+                if (version){
+                    let digits = gold.toString().split('');
+                    let sum = digits.reduce((acc, digit) => acc + parseInt(digit), 0);
+                    resultText += " 各桁の合計→" + sum
+                    if (gold == 0) {resultText += "\n※警告※ 最終ゴールドが0の場合は未検証のため、もらえない可能性があります！"} //ダメっぽいけど一応残しておく
+                }
+                else {
+                    const byte1 = (gold >> 16) & 0xFF // 上位8ビット
+                    const byte2 = (gold >> 8) & 0xFF  // 中位8ビット
+                    const byte3 = gold & 0xFF         // 下位8ビット
+                    const hex1 = byte1.toString(16).padStart(2, '0')
+                    const hex2 = byte2.toString(16).padStart(2, '0')
+                    const hex3 = byte3.toString(16).padStart(2, '0')
+                    resultText += " 16進数→" + hex1 + " " + hex2 + " " + hex3
+                    resultText += "\n合計の下位4bit→" + ((byte1 + byte2 + byte3) & 0x0F).toString(16).padStart(2, '0');
+                }
                 resultText = resultText.substr(1)
             }
 
